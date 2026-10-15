@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alur Penapisan Sysmex XR-1000</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F3; --surface:#FFFFFF; --ink:#18262F; --muted:#5B6B75; --line:#C9D3D8;
+  --steel:#2E5A78; --sepsis:#A8690F; --malig:#62468F; --both:#9C3245; --calm:#3D7A5E;
+  --track:#DDE4E7; --off:#F6F8F9;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#11181D; --surface:#19232A; --ink:#E4EAED; --muted:#98A7B0; --line:#33424C;
+    --steel:#7FB0D2; --sepsis:#E0A64A; --malig:#B39BE0; --both:#E58395; --calm:#7DC4A2;
+    --track:#2A363E; --off:#151D23; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11181D; --surface:#19232A; --ink:#E4EAED; --muted:#98A7B0; --line:#33424C;
+  --steel:#7FB0D2; --sepsis:#E0A64A; --malig:#B39BE0; --both:#E58395; --calm:#7DC4A2;
+  --track:#2A363E; --off:#151D23; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px}
+header h1{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:clamp(1.6rem,3.4vw,2.3rem);
+  line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:68ch}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:28px;margin-top:26px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.panel h2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.2rem;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 16px}
+.field{margin-bottom:18px}
+.field label{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;margin-bottom:6px}
+.field label span{font-weight:400;color:var(--muted);font-size:.85rem}
+.field input{width:100%;font:inherit;font-size:1.15rem;padding:9px 12px;border:1px solid var(--line);
+  border-radius:6px;background:var(--off);color:var(--ink)}
+.field input:focus{outline:3px solid color-mix(in srgb,var(--steel) 45%,transparent);outline-offset:1px;border-color:var(--steel)}
+.field input:disabled{opacity:.5}
+.gauge{position:relative;height:8px;background:var(--track);border-radius:4px;margin-top:8px;overflow:visible}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--muted);width:0;transition:width .25s,background .25s}
+.gauge .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.gauge-note{font-size:.8rem;color:var(--muted);margin-top:4px;min-height:1.2em}
+.hi .fill{background:var(--steel)}
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--off);color:var(--ink);padding:7px 11px;font-size:.88rem}
+button:hover{border-color:var(--steel)}
+button:focus-visible{outline:3px solid color-mix(in srgb,var(--steel) 45%,transparent);outline-offset:2px}
+.actions{display:flex;gap:8px;margin-top:14px}
+.primary{background:var(--steel);color:var(--surface);border-color:var(--steel);font-weight:700}
+
+/* Tree */
+.tree{display:grid;gap:10px}
+.node{border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--off);color:var(--muted);transition:all .25s}
+.node b{color:inherit}
+.node.on{background:var(--surface);color:var(--ink);border-color:var(--steel);box-shadow:inset 4px 0 0 var(--steel)}
+.node.on.s{border-color:var(--sepsis);box-shadow:inset 4px 0 0 var(--sepsis)}
+.node.on.m{border-color:var(--malig);box-shadow:inset 4px 0 0 var(--malig)}
+.node.on.b{border-color:var(--both);box-shadow:inset 4px 0 0 var(--both)}
+.node.on.c{border-color:var(--calm);box-shadow:inset 4px 0 0 var(--calm)}
+.node small{display:block;font-size:.82rem}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:620px){.split,.trio{grid-template-columns:1fr}}
+.conn{height:14px;width:2px;background:var(--line);margin:0 auto}
+.conn.on{background:var(--steel)}
+
+/* Result */
+.result{margin-top:22px;border-radius:10px;padding:20px;border:2px solid var(--line);background:var(--surface)}
+.result.s{border-color:var(--sepsis)} .result.m{border-color:var(--malig)}
+.result.b{border-color:var(--both)} .result.c{border-color:var(--calm)}
+.result h3{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.35rem;margin:2px 0 12px;line-height:1.2}
+.result .tag{font-weight:700;font-size:.9rem}
+.result.s .tag{color:var(--sepsis)} .result.m .tag{color:var(--malig)}
+.result.b .tag{color:var(--both)} .result.c .tag{color:var(--calm)}
+.rows{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;margin:0}
+.rows dt{font-weight:700} .rows dd{margin:0}
+@media (max-width:520px){.rows{grid-template-columns:1fr}.rows dd{margin-bottom:6px}}
+.warn{margin-top:14px;padding:10px 12px;border-left:4px solid var(--sepsis);background:var(--off);font-size:.9rem;border-radius:0 6px 6px 0}
+.empty{color:var(--muted)}
+footer{margin-top:28px;color:var(--muted);font-size:.85rem;max-width:80ch}
+footer table{border-collapse:collapse;margin:8px 0 14px;font-size:.85rem}
+footer th,footer td{border-bottom:1px solid var(--line);padding:4px 10px 4px 0;text-align:left}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{.examples,.actions{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Alur penapisan sepsis dan keganasan hematologi</h1>
+    <p>Masukkan hasil darah lengkap Sysmex XR-1000. Jalur pada diagram menyala mengikuti nilai yang diisi, dan rekomendasi muncul di bawahnya. Pasien sasaran: demam persisten, sindrom inflamasi sistemik, leukositosis, atau sitopenia.</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <section class="panel" aria-labelledby="in-h">
+      <h2 id="in-h">Hasil pemeriksaan</h2>
+      <p class="sub">IG# wajib. Tiga parameter lain dipakai bila IG# ≥ 0,1.</p>
+
+      <div class="field" id="f-ig">
+        <label for="ig">IG# <span>×10³/µL · batas 0,1</span></label>
+        <input id="ig" type="number" step="0.01" min="0" inputmode="decimal" placeholder="mis. 0,25">
+        <div class="gauge"><div class="fill"></div><div class="tick"></div></div>
+        <div class="gauge-note"></div>
+      </div>
+      <div class="field" id="f-nri">
+        <label for="nri">NEUT-RI <span>FI · batas 48</span></label>
+        <input id="nri" type="number" step="0.1" min="0" inputmode="decimal" placeholder="mis. 50,2">
+        <div class="gauge"><div class="fill"></div><div class="tick"></div></div>
+        <div class="gauge-note"></div>
+      </div>
+      <div class="field" id="f-lx">
+        <label for="lx">LY-X <span>ch · batas 80</span></label>
+        <input id="lx" type="number" step="0.1" min="0" inputmode="decimal" placeholder="mis. 78,4">
+        <div class="gauge"><div class="fill"></div><div class="tick"></div></div>
+        <div class="gauge-note"></div>
+      </div>
+      <div class="field" id="f-lz">
+        <label for="lz">LY-Z <span>ch · batas 60</span></label>
+        <input id="lz" type="number" step="0.1" min="0" inputmode="decimal" placeholder="mis. 58,9">
+        <div class="gauge"><div class="fill"></div><div class="tick"></div></div>
+        <div class="gauge-note"></div>
+      </div>
+
+      <p class="sub" style="margin:4px 0 0">Isi dengan contoh ilustratif:</p>
+      <div class="examples">
+        <button data-ex="0.02,44,76,57">IG# rendah</button>
+        <button data-ex="0.42,55.3,76.1,57.2">Pola 2A</button>
+        <button data-ex="0.31,44.6,86.4,64.8">Pola 2B</button>
+        <button data-ex="0.55,52.8,84.9,63.1">Pola 2C</button>
+      </div>
+      <div class="actions">
+        <button id="print" class="primary">Cetak hasil</button>
+        <button id="reset">Kosongkan</button>
+      </div>
+    </section>
+
+    <!-- TREE + RESULT -->
+    <section aria-labelledby="tree-h">
+      <div class="panel">
+        <h2 id="tree-h">Jalur keputusan</h2>
+        <p class="sub">Kotak yang menyala adalah jalur pasien ini.</p>
+        <div class="tree">
+          <div class="node on" id="n-start"><b>Darah lengkap Sysmex XR-1000</b><small>Demam persisten / SIRS / leukositosis / sitopenia</small></div>
+          <div class="conn on"></div>
+          <div class="split">
+            <div class="node" id="n-iglow"><b>Penapisan 1: IG# &lt; 0,1</b><small>Stimulasi sumsum tulang aktif (−)</small></div>
+            <div class="node" id="n-ighigh"><b>Penapisan 1: IG# ≥ 0,1</b><small>Stimulasi sumsum tulang aktif (+), left shift</small></div>
+          </div>
+          <div class="conn" id="c2"></div>
+          <div class="trio">
+            <div class="node" id="n-2a"><b>2A</b><small>NEUT-RI ≥ 48, LY-X/LY-Z normal</small></div>
+            <div class="node" id="n-2b"><b>2B</b><small>LY-X ≥ 80 dan/atau LY-Z ≥ 60, NEUT-RI normal</small></div>
+            <div class="node" id="n-2c"><b>2C</b><small>NEUT-RI tinggi dan LY-X/LY-Z tinggi</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result" id="result" aria-live="polite">
+        <p class="empty">Isi nilai IG# untuk memulai.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p><b>Dasar ambang.</b> Alur ini diturunkan dari studi retrospektif Sysmex XR-1000 (Sepsis n=47, Keganasan hematologi n=60, Normal n=39). Kekuatan pembeda masing-masing parameter pada data tersebut:</p>
+    <div style="overflow-x:auto">
+    <table>
+      <tr><th>Parameter</th><th>Perbandingan</th><th>AUC</th></tr>
+      <tr><td>IG#</td><td>Sepsis vs Normal</td><td>0,959</td></tr>
+      <tr><td>IG#</td><td>Keganasan vs Sepsis</td><td>0,626</td></tr>
+      <tr><td>NEUT-RI</td><td>Sepsis vs Normal</td><td>0,803</td></tr>
+      <tr><td>LY-X</td><td>Keganasan vs Normal</td><td>0,893</td></tr>
+      <tr><td>LY-X</td><td>Keganasan vs Sepsis</td><td>0,791</td></tr>
+    </table>
+    </div>
+    <p>Alat bantu penelitian dan edukasi, belum divalidasi secara prospektif. Bukan pengganti penilaian klinis, apusan darah tepi, maupun pemeriksaan konfirmasi.</p>
+  </footer>
+</div>
+
+<script>
+const T = { ig:0.1, nri:48, lx:80, lz:60 };          // ambang dari decision tree
+const MAX = { ig:1.0, nri:70, lx:100, lz:80 };       // skala tampilan gauge saja
+const $ = id => document.getElementById(id);
+const inputs = ['ig','nri','lx','lz'];
+
+function val(id){ const v = parseFloat($(id).value.replace(',','.')); return isNaN(v) ? null : v; }
+
+function gauge(id, v){
+  const f = $('f-'+id), fill = f.querySelector('.fill'), note = f.querySelector('.gauge-note');
+  f.querySelector('.tick').style.left = (T[id]/MAX[id]*100)+'%';
+  if (v === null){ fill.style.width='0'; note.textContent=''; f.classList.remove('hi'); return; }
+  fill.style.width = Math.min(v/MAX[id]*100,100)+'%';
+  const hi = v >= T[id];
+  f.classList.toggle('hi', hi);
+  note.textContent = hi ? 'Di atas atau sama dengan batas' : 'Di bawah batas';
+}
+
+/* Mesin aturan: satu fungsi murni, mudah diuji & diganti */
+function evaluate(ig, nri, lx, lz){
+  if (ig === null) return { code:'none' };
+  const lyHigh = (lx !== null && lx >= T.lx) || (lz !== null && lz >= T.lz);
+  if (ig < T.ig) return { code:'low', lyHigh };
+  if (nri === null || (lx === null && lz === null)) return { code:'need' };
+  const nHigh = nri >= T.nri;
+  if (nHigh && !lyHigh) return { code:'2A' };
+  if (!nHigh && lyHigh) return { code:'2B' };
+  if (nHigh && lyHigh)  return { code:'2C' };
+  return { code:'unclassified' };
+}
+
+const OUT = {
+  low:{ cls:'c', tag:'Penapisan 1 · IG# normal/rendah', title:'Stimulasi sumsum tulang aktif negatif',
+    rows:[['Interpretasi','Kemungkinan sepsis berat atau keganasan hematologi rendah.'],
+          ['Saran','Evaluasi etiologi infeksi lokal ringan, non-bakterial, atau non-hematologis.']] },
+  '2A':{ cls:'s', tag:'Penapisan 2A', title:'Kecurigaan kuat sepsis / infeksi bakterial sistemik',
+    rows:[['Saran laboratorium','Kultur mikroba, evaluasi prokalsitonin/CRP.'],
+          ['Klinis','Inisiasi antibiotik empiris dan kalkulasi SOFA score.']] },
+  '2B':{ cls:'m', tag:'Penapisan 2B', title:'Kecurigaan kuat keganasan hematologi',
+    rows:[['Kemungkinan','Leukemia akut, MPN, atau limfoma.'],
+          ['Saran laboratorium','Evaluasi apusan darah tepi, cek flag Blasts/Abn Lympho, lalu BMA/imunofenotipe.'],
+          ['Klinis','Kolaborasi dengan konsultan hemato-onkologi.']] },
+  '2C':{ cls:'b', tag:'Penapisan 2C', title:'Keganasan hematologi dengan superimposed sepsis',
+    rows:[['Kemungkinan','Termasuk febrile neutropenia.'],
+          ['Saran laboratorium','Evaluasi apusan darah tepi dan kultur darah.'],
+          ['Klinis','Stabilisasi sepsis, antimikroba spektrum luas, kolaborasi konsultan hemato-onkologi.']] },
+  unclassified:{ cls:'', tag:'Di luar cabang 2A–2C', title:'Left shift tanpa pola NEUT-RI maupun LY-X/LY-Z',
+    rows:[['Catatan','IG# meningkat, tetapi NEUT-RI, LY-X, dan LY-Z semuanya di bawah batas. Pohon keputusan belum memiliki cabang untuk pola ini.'],
+          ['Saran','Korelasi klinis dan evaluasi apusan darah tepi.']] }
+};
+
+function render(){
+  const v = Object.fromEntries(inputs.map(i => [i, val(i)]));
+  inputs.forEach(i => gauge(i, v[i]));
+  const ighigh = v.ig !== null && v.ig >= T.ig;
+
+  const r = evaluate(v.ig, v.nri, v.lx, v.lz);
+  const tone = r.code==='2A'?'s':r.code==='2B'?'m':r.code==='2C'?'b':'';
+  $('n-iglow').className = 'node' + (r.code==='low' ? ' on c' : '');
+  $('n-ighigh').className = 'node' + (ighigh ? ' on' : '');
+  $('c2').className = 'conn' + (ighigh ? ' on' : '');
+  ['2a','2b','2c'].forEach(k => $('n-'+k).className = 'node' + (r.code===k.toUpperCase() ? ' on '+tone : ''));
+
+  const box = $('result');
+  box.className = 'result';
+  if (r.code==='none'){ box.innerHTML='<p class="empty">Isi nilai IG# untuk memulai.</p>'; return; }
+  if (r.code==='need'){ box.innerHTML='<p class="empty">IG# ≥ 0,1. Lengkapi NEUT-RI serta LY-X dan/atau LY-Z untuk penapisan tahap 2.</p>'; return; }
+  const o = OUT[r.code];
+  if (o.cls) box.classList.add(o.cls);
+  let html = `<div class="tag">${o.tag}</div><h3>${o.title}</h3><dl class="rows">` +
+    o.rows.map(([k,d]) => `<dt>${k}</dt><dd>${d}</dd>`).join('') + '</dl>';
+  if (r.code==='low' && r.lyHigh){
+    html += '<div class="warn">LY-X atau LY-Z melewati batas meski IG# rendah. Neoplasma limfoid tidak selalu disertai left shift; pertimbangkan apusan darah tepi sebelum menyingkirkan keganasan.</div>';
+  }
+  box.innerHTML = html;
+}
+
+inputs.forEach(i => $(i).addEventListener('input', render));
+document.querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => {
+  b.dataset.ex.split(',').forEach((x,k) => $(inputs[k]).value = x); render();
+}));
+$('reset').addEventListener('click', () => { inputs.forEach(i => $(i).value=''); render(); $('ig').focus(); });
+$('print').addEventListener('click', () => window.print());
+render();
+</script>
+</body>
+</html>
